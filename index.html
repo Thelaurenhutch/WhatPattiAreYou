@@ -4,240 +4,359 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>What Patti Are You?</title>
+  <title>Patti-o-Matic</title>
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background: #f9f2ec;
-      color: #333;
+      font-family: 'Silkscreen', monospace;
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      background-color: #111;
+      background-image: url('background_pixel_art_fallback.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: #f0f0f0;
+      min-height: 100vh;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
     }
-    .quiz-container {
-      max-width: 600px;
-      width: 100%;
-      background: #fff;
+    .container {
+      width: 90%;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
       border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      padding: 20px;
-    }
-    h1, h2 {
       text-align: center;
+      background-color: #0e242e;
     }
-    .question {
-      margin-bottom: 20px;
-      font-size: 1.2em;
+    #intro {
+      padding: 2rem;
+      border-radius: 12px;
     }
-    .answers button {
-      display: block;
-      width: 100%;
-      margin: 8px 0;
-      padding: 12px;
-      background: #f0d9ff;
+    button {
+      margin: 0.5rem;
+      padding: 1rem 1.5rem;
+      font-size: 1rem;
       border: none;
-      border-radius: 8px;
-      font-size: 1em;
+      border-radius: 10px;
       cursor: pointer;
-      transition: background 0.2s;
+      background-color: #ffcc33;
+      color: #111;
+      font-weight: bold;
+      transition: background 0.3s;
+      font-family: 'Silkscreen', monospace;
     }
-    .answers button:hover {
-      background: #e1c4ff;
+    button:hover {
+      background-color: #ffdd55;
     }
-    .result {
-      text-align: center;
+    .question, .result {
+      margin-top: 2rem;
+      font-size: 1.2rem;
+    }
+    .answers {
+      margin-top: 1rem;
+    }
+    .hidden {
       display: none;
     }
-    .result img {
+    #pacGraphic {
+      margin-top: 1rem;
       max-width: 100%;
-      border-radius: 8px;
-      margin-top: 20px;
+      border-radius: 10px;
+    }
+    @media (max-width: 480px) {
+      button {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+      }
+      .question {
+        font-size: 1.1rem;
+      }
+      .answers button {
+        width: 100%;
+        margin: 0.5rem 0;
+      }
+      #pacGraphic {
+        max-height: 200px;
+        object-fit: contain;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="quiz-container">
-    <h1>What Patti Are You?</h1>
-    <div class="quiz">
-      <div class="question" id="question"></div>
-      <div class="answers" id="answers"></div>
+  <div class="container">
+    <div id="intro">
+      <h1>Patti-o-Matic</h1>
+      <p>Which Patti are you? Only chaos can decide.</p>
+      <button onclick="startGame()">FIND YOUR PATTI</button>
     </div>
-    <div class="result" id="result">
-      <h2 id="result-title"></h2>
-      <p id="result-description"></p>
-      <img id="result-image" src="" alt="Your Patti Essence" />
+
+    <div id="quiz" class="hidden">
+      <div class="question" id="questionText"></div>
+      <div class="answers" id="answerButtons"></div>
     </div>
-  </div>
+
+    <div id="result" class="hidden">
+      <h2>You are...</h2>
+      <div id="pacResult" style="font-size: 1.5rem; margin-top: 1rem;"></div>
+      <div id="pacDescription" style="margin-top: 1rem; font-style: italic;"></div>
+      <img id="pacGraphic" src="" alt="Patti Graphic">
+      <br>
+      <div id="downloadButtons">
+        <button onclick="downloadResultImage()">Download Your Patti</button>
+        <button onclick="location.reload()">Try Again</button>
+      </div>
+    </div>
 
   <script>
-    const questions = JSON.parse(`{
-  "title": "What Patti Are You?",
-  "questions": [
-    "How do you spend your ideal weekend?",
-    "Pick a snack.",
-    "What\u2019s in your bag right now?",
-    "Pick something to text the family group chat.",
-    "What\u2019s your energy today?",
-    "What\u2019s your personal motto?",
-    "What was your last Google search?",
-    "What\u2019s your next hobby or weird new obsession?",
-    "What are you most likely to be arrested for?",
-    "What is your essence distilled into a single, haunting phrase?"
-  ],
-  "answers": [
-    [
-      "Whittling a tiny sword for a worm you\u2019ve named Kevin.",
-      "Screaming into a pillow because the mauve isn\u2019t mauve enough.",
-      "Being gently asked to leave the park after somersaulting into a picnic.",
-      "Making eye contact with your reflection in a puddle and whispering, 'Soon.'",
-      "Churning butter at midnight just to feel something."
-    ],
-    [
-      "A single grape you chew 47 times while staring at the floor.",
-      "A crayon you almost eat, but then remember who you are.",
-      "A warm string cheese you don\u2019t remember acquiring.",
-      "An unmarked jar of something glowing in the fridge.",
-      "A cocktail olive skewered on a popsicle stick."
-    ],
-    [
-      "A cracked teacup, a feather, and something that may be a seed or a tooth.",
-      "Three broken pencils, a kazoo, and one mysterious sticky patch.",
-      "Gauze, a granola wrapper, and a receipt that just says \u201csprint.\u201d",
-      "A mason jar labeled \u201cDo Not Shake\u201d and a packet of emergency yeast.",
-      "Glitter, confetti, and a very small bottle of something labeled 'Just In Case.'"
-    ],
-    [
-      "The basil has spoken. I must obey.",
-      "Do NOT open the fridge. I mean it this time.",
-      "I\u2019m fine but if anyone has crutches and soup, lmk.",
-      "I adopted 4 more. Names pending.",
-      "Going to Michaels. If I\u2019m not back by dusk, avenge me."
-    ],
-    [
-      "I\u2019ve been up since 5 a.m. and I\u2019ve already trimmed a hedge and declared war on a raccoon.",
-      "I\u2019m holding back tears over a paint swatch named \u2018Misty Regret.\u2019",
-      "I fell down earlier and I think it made me stronger.",
-      "I\u2019m buzzing with power and possibly radiation.",
-      "I made a mimosa in a protein shaker. Don\u2019t ask."
-    ],
-    [
-      "If it grows, it knows.",
-      "Art is pain, but also glitter.",
-      "It\u2019s not a fall if you pose at the end.",
-      "That\u2019s not a side effect\u2014it\u2019s a lifestyle.",
-      "I can\u2019t come, the cats have unionized."
-    ],
-    [
-      "Can raccoons be emotionally supportive?",
-      "Synonyms for \u2018moist but artistic.\u2019",
-      "Can you get a concussion from enthusiasm?",
-      "What happens if you microwave uranium?",
-      "Brunch cocktails to fake confidence."
-    ],
-    [
-      "Cultivating moss on purpose, for reasons you won\u2019t explain.",
-      "Making your own paint from crushed berries and spite.",
-      "Competitive falling. There\u2019s a league. You\u2019re undefeated.",
-      "Recording an album of ambient radiation noises.",
-      "Hot-gluing sequins to your tax documents 'for flair.'"
-    ],
-    [
-      "Starting a turf war with a community garden.",
-      "Painting over a mural because it 'lacked emotional nuance.'",
-      "Attempting to bike through a wedding ceremony 'as a shortcut.'",
-      "Hoarding glowing objects labeled 'definitely unstable.'",
-      "Harboring 17 unlicensed cats in your sunroom."
-    ],
-    [
-      "Spoke to plants like old friends. Buried secrets in the mulch.",
-      "Left behind stains and symphonies. Everything was a canvas.",
-      "Moved through the world like a well-meaning tornado in flip-flops.",
-      "Glowed under pressure. Leaked under less pressure.",
-      "Crafted beauty from chaos and a little bit of lint."
+    const questions = [
+  {
+    "text": "How do you spend your ideal weekend?",
+    "answers": [
+      {
+        "text": "Whittling a tiny sword for a worm you\u2019ve named Kevin.",
+        "scores": {
+          "Gardening Patti": 2,
+          "Crafty Patti": 1
+        }
+      },
+      {
+        "text": "Screaming into a pillow because the mauve isn\u2019t mauve enough.",
+        "scores": {
+          "Painting Patti": 2,
+          "Singing Patti": 1
+        }
+      },
+      {
+        "text": "Being gently asked to leave the park after somersaulting into a picnic.",
+        "scores": {
+          "Falling Off Bicycle Patti": 2,
+          "Drunk Patti": 1
+        }
+      },
+      {
+        "text": "Making eye contact with your reflection in a puddle and whispering, 'Soon.'",
+        "scores": {
+          "Radioactive Patti": 2,
+          "Too Many Feral Cats Patti": 1
+        }
+      },
+      {
+        "text": "Churning butter at midnight just to feel something.",
+        "scores": {
+          "I'm Stuck in a Vat of Sourdough Patti": 2,
+          "Dysentery Patti": 1
+        }
+      }
     ]
-  ]
-}`);
-    const pattiMap = [
-      ["Gardening Patti", "Crafty Patti"],
-      ["Painting Patti", "Singing Patti"],
-      ["Falling Off Bicycle Patti", "Drunk Patti"],
-      ["Radioactive Patti", "Cat Patti"],
-      ["Sourdough Patti", "Dysentery Patti"],
-      ["Gardening Patti", "Cat Patti"],
-      ["Painting Patti", "Singing Patti"],
-      ["Falling Off Bicycle Patti", "Dysentery Patti"],
-      ["Radioactive Patti", "Sourdough Patti"],
-      ["Drunk Patti", "Crafty Patti"],
-      ["Gardening Patti", "Dysentery Patti"],
-      ["Painting Patti", "Singing Patti"],
-      ["Falling Off Bicycle Patti", "Cat Patti"],
-      ["Radioactive Patti", "Crafty Patti"],
-      ["Drunk Patti", "Sourdough Patti"],
-      ["Gardening Patti", "Singing Patti"],
-      ["Sourdough Patti", "Radioactive Patti"],
-      ["Bicycle Patti", "Dysentery Patti"],
-      ["Cat Patti", "Painting Patti"],
-      ["Crafty Patti", "Drunk Patti"],
-      ["Gardening Patti", "Sourdough Patti"],
-      ["Painting Patti", "Crafty Patti"],
-      ["Bicycle Patti", "Singing Patti"],
-      ["Radioactive Patti", "Drunk Patti"],
-      ["Cat Patti", "Dysentery Patti"],
-      ["Gardening Patti", "Painting Patti"],
-      ["Bicycle Patti", "Singing Patti"],
-      ["Cat Patti", "Drunk Patti"],
-      ["Sourdough Patti", "Crafty Patti"],
-      ["Radioactive Patti", "Dysentery Patti"],
-      ["Gardening Patti", "Drunk Patti"],
-      ["Painting Patti", "Crafty Patti"],
-      ["Bicycle Patti", "Singing Patti"],
-      ["Radioactive Patti", "Sourdough Patti"],
-      ["Cat Patti", "Dysentery Patti"],
-      ["Gardening Patti", "Cat Patti"],
-      ["Painting Patti", "Singing Patti"],
-      ["Bicycle Patti", "Dysentery Patti"],
-      ["Radioactive Patti", "Sourdough Patti"],
-      ["Crafty Patti", "Drunk Patti"]
-    ];
-
-    const pattiScores = {};
-    const pattiImages = {
-      "Gardening Patti": "images/gardening_patti.png",
-      "Painting Patti": "images/painting_patti.png",
-      "Falling Off Bicycle Patti": "images/bicycle_patti.png",
-      "Radioactive Patti": "images/radioactive_patti.png",
-      "Drunk Patti": "images/drunk_patti.png",
-      "Singing Patti": "images/singing_patti.png",
-      "Too Many Feral Cats Patti": "images/cat_patti.png",
-      "I’m Stuck in a Vat of Sourdough Patti": "images/sourdough_patti.png",
-      "Dysentery Patti": "images/dysentery_patti.png",
-      "Crafty Patti": "images/crafty_patti.png"
-    };
+  },
+  {
+    "text": "Pick a snack.",
+    "answers": [
+      {
+        "text": "A single grape you chew 47 times while staring at the floor.",
+        "scores": {
+          "Gardening Patti": 2,
+          "Too Many Feral Cats Patti": 1
+        }
+      },
+      {
+        "text": "A crayon you almost eat, but then remember who you are.",
+        "scores": {
+          "Painting Patti": 2,
+          "Singing Patti": 1
+        }
+      },
+      {
+        "text": "A warm string cheese you don\u2019t remember acquiring.",
+        "scores": {
+          "Falling Off Bicycle Patti": 2,
+          "Dysentery Patti": 1
+        }
+      },
+      {
+        "text": "An unmarked jar of something glowing in the fridge.",
+        "scores": {
+          "Radioactive Patti": 2,
+          "I'm Stuck in a Vat of Sourdough Patti": 1
+        }
+      },
+      {
+        "text": "A cocktail olive you found in your bra.",
+        "scores": {
+          "Drunk Patti": 2,
+          "Crafty Patti": 1
+        }
+      }
+    ]
+  },
+  {
+    "text": "What\u2019s in your bag right now?",
+    "answers": [
+      {
+        "text": "A cracked teacup, a feather, and something that may be a seed or a tooth.",
+        "scores": {
+          "Gardening Patti": 2,
+          "Dysentery Patti": 1
+        }
+      },
+      {
+        "text": "Three broken pencils, a kazoo, and one mysterious sticky patch.",
+        "scores": {
+          "Painting Patti": 2,
+          "Singing Patti": 1
+        }
+      },
+      {
+        "text": "Gauze, a granola wrapper, and a receipt that just says \u201csprint.\u201d",
+        "scores": {
+          "Falling Off Bicycle Patti": 2,
+          "Too Many Feral Cats Patti": 1
+        }
+      },
+      {
+        "text": "A mason jar labeled \u201cDo Not Shake\u201d and a packet of emergency yeast.",
+        "scores": {
+          "Radioactive Patti": 2,
+          "Crafty Patti": 1
+        }
+      },
+      {
+        "text": "Glitter, confetti, and a very small bottle labeled \u201cJust In Case.\u201d",
+        "scores": {
+          "Drunk Patti": 2,
+          "I'm Stuck in a Vat of Sourdough Patti": 1
+        }
+      }
+    ]
+  },
+  {
+    "text": "Pick something to text the family group chat.",
+    "answers": [
+      {
+        "text": "The basil has spoken. I must obey.",
+        "scores": {
+          "Gardening Patti": 2,
+          "Singing Patti": 1
+        }
+      },
+      {
+        "text": "Do NOT open the fridge. I mean it this time.",
+        "scores": {
+          "I'm Stuck in a Vat of Sourdough Patti": 2,
+          "Radioactive Patti": 1
+        }
+      },
+      {
+        "text": "I\u2019m fine but if anyone has crutches and soup, lmk.",
+        "scores": {
+          "Falling Off Bicycle Patti": 2,
+          "Dysentery Patti": 1
+        }
+      },
+      {
+        "text": "I adopted 4 more. Names pending.",
+        "scores": {
+          "Too Many Feral Cats Patti": 2,
+          "Painting Patti": 1
+        }
+      },
+      {
+        "text": "Going to Michaels. If I\u2019m not back by dusk, avenge me.",
+        "scores": {
+          "Crafty Patti": 2,
+          "Drunk Patti": 1
+        }
+      }
+    ]
+  }
+];
+    const results = [
+  {
+    "name": "Gardening Patti",
+    "description": "You nurture life, lose hours talking to worms, and have dirt permanently under your nails.",
+    "image": "gardening_patti.png"
+  },
+  {
+    "name": "Painting Patti",
+    "description": "You see the world through brushstrokes and unfinished projects.",
+    "image": "painting_patti.png"
+  },
+  {
+    "name": "Falling Off Bicycle Patti",
+    "description": "You live fast, fall faster, and inspire concern and applause wherever you go.",
+    "image": "bicycle_patti.png"
+  },
+  {
+    "name": "Radioactive Patti",
+    "description": "You radiate a mysterious glow. It\u2019s probably fine. Probably.",
+    "image": "radioactive_patti.png"
+  },
+  {
+    "name": "Drunk Patti",
+    "description": "Life\u2019s a party and so are you, especially when you're lost in a HomeGoods.",
+    "image": "drunk_patti.png"
+  },
+  {
+    "name": "Singing Patti",
+    "description": "Your life is a musical\u2014unfortunately, you\u2019re the only one who knows it.",
+    "image": "singing_patti.png"
+  },
+  {
+    "name": "Too Many Feral Cats Patti",
+    "description": "You have a heart as wild as your front porch. Accept the chaos.",
+    "image": "cat_patti.png"
+  },
+  {
+    "name": "I'm Stuck in a Vat of Sourdough Patti",
+    "description": "You rise under pressure, but at what cost?",
+    "image": "sourdough_patti.png"
+  },
+  {
+    "name": "Dysentery Patti",
+    "description": "You live like it\u2019s 1849 and you are NOT making it across the river.",
+    "image": "dysentery_patti.png"
+  },
+  {
+    "name": "Crafty Patti",
+    "description": "You see a blank space and instinctively Mod Podge it. Dangerously resourceful.",
+    "image": "crafty_patti.png"
+  }
+];
 
     let currentQuestion = 0;
+    let scoreMap = {};
+    let finalResult = {};
+
+    function startGame() {
+      document.getElementById("intro").classList.add("hidden");
+      document.getElementById("quiz").classList.remove("hidden");
+      showQuestion();
+    }
 
     function showQuestion() {
-      document.getElementById("question").innerText = questions.questions[currentQuestion];
-      const answersDiv = document.getElementById("answers");
-      answersDiv.innerHTML = "";
-      questions.answers[currentQuestion].forEach((ans, index) => {
+      const q = questions[currentQuestion];
+      document.getElementById("questionText").textContent = q.text;
+      const answerButtons = document.getElementById("answerButtons");
+      answerButtons.innerHTML = "";
+
+      q.answers.forEach(answer => {
         const btn = document.createElement("button");
-        btn.innerText = ans;
-        btn.onclick = () => selectAnswer(index);
-        answersDiv.appendChild(btn);
+        btn.textContent = answer.text;
+        btn.onclick = () => selectAnswer(answer);
+        answerButtons.appendChild(btn);
       });
     }
 
-    function selectAnswer(index) {
-      const key = currentQuestion * 5 + index;
-      const [p1, p2] = pattiMap[key];
-      pattiScores[p1] = (pattiScores[p1] || 0) + 1;
-      pattiScores[p2] = (pattiScores[p2] || 0) + 1;
+    function selectAnswer(answerObj) {
+      for (let patti in answerObj.scores) {
+        scoreMap[patti] = (scoreMap[patti] || 0) + answerObj.scores[patti];
+      }
       currentQuestion++;
-      if (currentQuestion < questions.questions.length) {
+      if (currentQuestion < questions.length) {
         showQuestion();
       } else {
         showResult();
@@ -245,16 +364,28 @@
     }
 
     function showResult() {
-      document.querySelector(".quiz").style.display = "none";
-      const resultDiv = document.getElementById("result");
-      const best = Object.entries(pattiScores).sort((a, b) => b[1] - a[1])[0][0];
-      document.getElementById("result-title").innerText = `You are: ${best}!`;
-      document.getElementById("result-description").innerText = `Your essence radiates full ${best} energy.`;
-      document.getElementById("result-image").src = pattiImages[best] || "";
-      resultDiv.style.display = "block";
+      document.getElementById("quiz").classList.add("hidden");
+      document.getElementById("result").classList.remove("hidden");
+      const top = Object.entries(scoreMap).sort((a, b) => b[1] - a[1])[0][0];
+      finalResult = results.find(r => r.name === top);
+      document.getElementById("pacResult").textContent = finalResult.name;
+      document.getElementById("pacDescription").textContent = finalResult.description;
+      document.getElementById("pacGraphic").src = "images/" + finalResult.image;
     }
 
-    showQuestion();
+    function downloadResultImage() {
+      const resultNode = document.getElementById("result");
+      const buttonContainer = document.getElementById("downloadButtons");
+      buttonContainer.style.visibility = "hidden";
+      resultNode.style.backgroundColor = '#0e242e';
+      html2canvas(resultNode, { backgroundColor: '#0e242e' }).then(canvas => {
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = "patti_result.png";
+        link.click();
+        buttonContainer.style.visibility = "visible";
+      });
+    }
   </script>
 </body>
 </html>
