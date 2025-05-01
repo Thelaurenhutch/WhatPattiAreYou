@@ -8,21 +8,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    body {
-      font-family: 'Silkscreen', monospace;
-      margin: 0;
-      padding: 0;
-      background-color: #111;
-      background-image: url('background_pixel_art_fallback.png');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      color: #f0f0f0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+body {
+  font-family: 'Silkscreen', monospace;
+  margin: 0;
+  padding: 0;
+  background-color: #111;
+  background-image: url('background_pixel_art_fallback.png');
+  background-repeat: repeat;         /* ← tile in both directions */
+  background-size: 32px 32px;        /* ← size of one tile */
+  background-position: 0 0;          /* ← start tiling from top‐left */
+  color: #f0f0f0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
     .container {
       width: 90%;
       max-width: 500px;
